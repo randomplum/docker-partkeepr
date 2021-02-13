@@ -1,4 +1,4 @@
-FROM php:7.1-apache
+FROM chialab/php:7.1-apache
 LABEL maintainer="Markus Hubig <mhubig@gmail.com>"
 LABEL version="1.4.0-20"
 
@@ -14,19 +14,22 @@ RUN set -ex \
         libxml2-dev \
         libpng-dev \
         libldap2-dev \
+        git \
         cron \
     --no-install-recommends && rm -r /var/lib/apt/lists/* \
     \
     && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
-    && docker-php-ext-install -j$(nproc) curl ldap bcmath gd dom intl opcache pdo pdo_mysql \
     \
     && pecl install apcu_bc-beta \
-    && docker-php-ext-enable apcu \
+    && docker-php-ext-enable apcu \ 
     \
     && cd /var/www/html \
-    && curl -sL https://downloads.partkeepr.org/partkeepr-${PARTKEEPR_VERSION}.tbz2 \
-        |bsdtar --strip-components=1 -xvf- \
+    && composer self-update 1.4.1 \
+    && git clone https://github.com/randomplum/PartKeepr.git . \
+    && cp app/config/parameters.php.dist app/config/parameters.php \
+    && composer install \
+    && ls -la /var/www/html/ \
     && chown -R www-data:www-data /var/www/html \
     \
     && a2enmod rewrite
